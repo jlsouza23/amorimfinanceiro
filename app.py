@@ -4,6 +4,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import hashlib
+import os
+import traceback
+from pathlib import Path
 
 # Configuração da página
 st.set_page_config(
@@ -21,6 +24,48 @@ def check_login(username, password):
     if username == "cintia.ferreira" and make_hash(password) == make_hash("Cf2025"):
         return True
     return False
+
+# Função para carregar o arquivo Excel com tratamento de erros
+def load_excel_file(file_path):
+    try:
+        # Verifica se o arquivo existe
+        if not os.path.exists(file_path):
+            st.error(f"❌ Arquivo não encontrado: {file_path}")
+            st.info("📁 Diretório atual: " + os.getcwd())
+            st.info("📄 Arquivos disponíveis: " + ", ".join(os.listdir()))
+            return None
+
+        # Verifica o tamanho do arquivo
+        file_size = os.path.getsize(file_path)
+        if file_size == 0:
+            st.error("❌ O arquivo está vazio!")
+            return None
+
+        # Tenta ler o arquivo
+        st.info(f"📊 Tentando ler o arquivo: {file_path}")
+        df = pd.read_excel(file_path)
+        
+        if df.empty:
+            st.error("❌ O arquivo foi lido mas está vazio!")
+            return None
+            
+        st.success(f"✅ Arquivo carregado com sucesso! Dimensões: {df.shape}")
+        return df
+
+    except FileNotFoundError as e:
+        st.error(f"❌ Erro ao encontrar o arquivo: {str(e)}")
+        return None
+    except PermissionError as e:
+        st.error(f"❌ Erro de permissão ao ler o arquivo: {str(e)}")
+        return None
+    except pd.errors.EmptyDataError as e:
+        st.error(f"❌ O arquivo está vazio ou mal formatado: {str(e)}")
+        return None
+    except Exception as e:
+        st.error(f"❌ Erro inesperado ao ler o arquivo: {str(e)}")
+        st.error("Detalhes do erro:")
+        st.code(traceback.format_exc())
+        return None
 
 # Função para a página principal
 def main_page():
@@ -44,24 +89,46 @@ def main_page():
     @st.cache_data
     def load_data():
         try:
-            # Lê a planilha consolidada
-            df = pd.read_excel('Consolidadas_1tri_2025.xlsx')
+            # Define o caminho do arquivo
+            file_path = 'Consolidadas_1tri_2025.xlsx'
+            
+            # Carrega o arquivo Excel
+            df = load_excel_file(file_path)
+            if df is None:
+                return None
             
             # Renomeia as colunas para o formato esperado
-            df = df.rename(columns={
-                'emopresa': 'empresa',
-                datetime(2025, 1, 31): '01/2025',
-                datetime(2025, 2, 28): '02/2025',
-                datetime(2025, 3, 31): '03/2025'
-            })
+            try:
+                df = df.rename(columns={
+                    'emopresa': 'empresa',
+                    datetime(2025, 1, 31): '01/2025',
+                    datetime(2025, 2, 28): '02/2025',
+                    datetime(2025, 3, 31): '03/2025'
+                })
+            except Exception as e:
+                st.error("❌ Erro ao renomear colunas:")
+                st.error(str(e))
+                st.info("📊 Colunas disponíveis: " + ", ".join(df.columns))
+                return None
             
             # Converte valores monetários para float
-            for col in ['01/2025', '02/2025', '03/2025', 'Saldo acumulado']:
-                df[col] = pd.to_numeric(df[col].astype(str).str.replace('$', '').str.replace(',', ''), errors='coerce')
+            try:
+                for col in ['01/2025', '02/2025', '03/2025', 'Saldo acumulado']:
+                    if col not in df.columns:
+                        st.error(f"❌ Coluna não encontrada: {col}")
+                        continue
+                    df[col] = pd.to_numeric(df[col].astype(str).str.replace('$', '').str.replace(',', ''), errors='coerce')
+            except Exception as e:
+                st.error("❌ Erro ao converter valores monetários:")
+                st.error(str(e))
+                return None
             
             return df
+
         except Exception as e:
-            st.error(f"Erro ao carregar os dados: {str(e)}")
+            st.error("❌ Erro inesperado ao preparar os dados:")
+            st.error(str(e))
+            st.code(traceback.format_exc())
             return None
 
     # Carregar os dados
