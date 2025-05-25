@@ -1,5 +1,13 @@
-.DS_Store
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .env
-.streamlit/secrets.toml 
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Sistema
+.DS_Store
+.vscode/
+.idea/ 

@@ -1,38 +1,46 @@
-# Dashboard Financeiro - 2025
+# Dashboard Financeiro - 1º Trimestre 2025
 
-Dashboard para análise financeira das empresas Porto Santa Maria, Marina Astúrias e Porto Marina Astúrias.
+Este é um dashboard interativo desenvolvido com Streamlit para análise financeira do primeiro trimestre de 2025.
 
 ## Funcionalidades
 
 - Visualização de indicadores financeiros por empresa
-- Análise comparativa entre empresas
-- Gráficos de evolução mensal
+- Gráficos comparativos de evolução mensal
+- Análise de tendências
 - Métricas consolidadas
-- Sistema de autenticação
+- Sistema de login seguro
 
 ## Requisitos
 
-- Python 3.8+
+- Python 3.13.3 ou superior
 - Dependências listadas em `requirements.txt`
 
-## Instalação Local
+## Instalação
 
 1. Clone o repositório
 2. Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```
-3. Execute o aplicativo:
+
+## Uso
+
+1. Coloque o arquivo `Consolidadas_1tri_2025.xlsx` na mesma pasta do `app.py`
+2. Execute o aplicativo:
 ```bash
 streamlit run app.py
 ```
 
-## Acesso
+3. Acesse o dashboard usando as seguintes credenciais:
+   - Usuário: cintia.ferreira
+   - Senha: Cf2025
 
-- URL: [será fornecida após deploy]
-- Usuário: cintia.ferreira
-- Senha: [fornecida separadamente]
+## Estrutura de Dados
 
-## Dados
-
-O dashboard utiliza dados do arquivo `Consolidadas_1tri_2025.xlsx` que deve estar na raiz do projeto. 
+O arquivo Excel deve conter as seguintes colunas:
+- empresa
+- info
+- 01/2025
+- 02/2025
+- 03/2025
+- Saldo acumulado 
