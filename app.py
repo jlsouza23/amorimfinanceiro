@@ -158,66 +158,63 @@ def main_page():
             (df['info'].isin(indicadores_selecionados))
         ]
 
-        # Layout em duas colunas
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("Evolução Mensal por Indicador")
+        # Evolução Mensal por Indicador
+        st.subheader("Evolução Mensal por Indicador")
+        
+        # Criar gráfico de linha para evolução mensal
+        for indicador in indicadores_selecionados:
+            dados_indicador = df_filtrado[df_filtrado['info'] == indicador]
             
-            # Criar gráfico de linha para evolução mensal
-            for indicador in indicadores_selecionados:
-                dados_indicador = df_filtrado[df_filtrado['info'] == indicador]
+            if not dados_indicador.empty:
+                fig = go.Figure()
                 
-                if not dados_indicador.empty:
-                    fig = go.Figure()
-                    
-                    for empresa in empresas_selecionadas:
-                        dados_empresa = dados_indicador[dados_indicador['empresa'] == empresa]
-                        if not dados_empresa.empty:
-                            fig.add_trace(go.Scatter(
-                                x=['Jan/25', 'Fev/25', 'Mar/25'],
-                                y=[dados_empresa['01/2025'].iloc[0], 
-                                   dados_empresa['02/2025'].iloc[0], 
-                                   dados_empresa['03/2025'].iloc[0]],
-                                name=empresa,
-                                mode='lines+markers'
-                            ))
-                    
-                    fig.update_layout(
-                        title=f"{indicador}",
-                        xaxis_title="Mês",
-                        yaxis_title="Valor (R$)",
-                        height=400
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+                for empresa in empresas_selecionadas:
+                    dados_empresa = dados_indicador[dados_indicador['empresa'] == empresa]
+                    if not dados_empresa.empty:
+                        fig.add_trace(go.Scatter(
+                            x=['Jan/25', 'Fev/25', 'Mar/25'],
+                            y=[dados_empresa['01/2025'].iloc[0], 
+                               dados_empresa['02/2025'].iloc[0], 
+                               dados_empresa['03/2025'].iloc[0]],
+                            name=empresa,
+                            mode='lines+markers'
+                        ))
+                
+                fig.update_layout(
+                    title=f"{indicador}",
+                    xaxis_title="Mês",
+                    yaxis_title="Valor (R$)",
+                    height=400
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
-        with col2:
-            st.subheader("Análise Comparativa")
+        # Análise Comparativa
+        st.subheader("Análise Comparativa")
+        
+        # Tabela com valores mensais
+        for empresa in empresas_selecionadas:
+            st.write(f"### {empresa}")
             
-            # Tabela com valores mensais
-            for empresa in empresas_selecionadas:
-                st.write(f"### {empresa}")
+            dados_empresa = df_filtrado[df_filtrado['empresa'] == empresa]
+            if not dados_empresa.empty:
+                tabela_dados = []
+                for indicador in indicadores_selecionados:
+                    dados_indicador = dados_empresa[dados_empresa['info'] == indicador]
+                    if not dados_indicador.empty:
+                        tabela_dados.append({
+                            'Indicador': indicador,
+                            'Janeiro': f"R$ {dados_indicador['01/2025'].iloc[0]:,.2f}",
+                            'Fevereiro': f"R$ {dados_indicador['02/2025'].iloc[0]:,.2f}",
+                            'Março': f"R$ {dados_indicador['03/2025'].iloc[0]:,.2f}",
+                            'Saldo Acumulado': f"R$ {dados_indicador['Saldo acumulado'].iloc[0]:,.2f}"
+                        })
                 
-                dados_empresa = df_filtrado[df_filtrado['empresa'] == empresa]
-                if not dados_empresa.empty:
-                    tabela_dados = []
-                    for indicador in indicadores_selecionados:
-                        dados_indicador = dados_empresa[dados_empresa['info'] == indicador]
-                        if not dados_indicador.empty:
-                            tabela_dados.append({
-                                'Indicador': indicador,
-                                'Janeiro': f"R$ {dados_indicador['01/2025'].iloc[0]:,.2f}",
-                                'Fevereiro': f"R$ {dados_indicador['02/2025'].iloc[0]:,.2f}",
-                                'Março': f"R$ {dados_indicador['03/2025'].iloc[0]:,.2f}",
-                                'Saldo Acumulado': f"R$ {dados_indicador['Saldo acumulado'].iloc[0]:,.2f}"
-                            })
-                    
-                    if tabela_dados:
-                        df_tabela = pd.DataFrame(tabela_dados)
-                        st.table(df_tabela)
+                if tabela_dados:
+                    df_tabela = pd.DataFrame(tabela_dados)
+                    st.table(df_tabela)
 
-        # Métricas importantes
-        st.subheader("Métricas Consolidadas (Saldo Acumulado)")
+        # Métricas Consolidadas
+        st.subheader("Métricas Consolidadas")
         
         # Criar um DataFrame com os saldos acumulados totais (soma de todas as empresas)
         saldos_consolidados = []
@@ -236,36 +233,33 @@ def main_page():
         # Criar DataFrame com os saldos
         df_saldos = pd.DataFrame(saldos_consolidados)
         
-        # Exibir em duas colunas: tabela e gráfico
-        col_metricas1, col_metricas2 = st.columns(2)
+        # Tabela de Saldos Consolidados
+        st.write("#### Tabela de Saldos Consolidados")
+        st.table(df_saldos)
         
-        with col_metricas1:
-            st.write("#### Tabela de Saldos Consolidados")
-            st.table(df_saldos)
+        # Gráfico de Saldos Consolidados
+        st.write("#### Gráfico de Saldos Consolidados")
+        # Preparar dados para o gráfico
+        df_grafico = pd.DataFrame(saldos_consolidados)
+        df_grafico['Valor'] = df_grafico['Saldo Acumulado'].str.replace('R$ ', '').str.replace(',', '').astype(float)
         
-        with col_metricas2:
-            st.write("#### Gráfico de Saldos Consolidados")
-            # Preparar dados para o gráfico (convertendo valores para números)
-            df_grafico = pd.DataFrame(saldos_consolidados)
-            df_grafico['Valor'] = df_grafico['Saldo Acumulado'].str.replace('R$ ', '').str.replace(',', '').astype(float)
-            
-            fig = go.Figure(data=[
-                go.Bar(
-                    x=df_grafico['Indicador'],
-                    y=df_grafico['Valor'],
-                    text=df_grafico['Saldo Acumulado'],
-                    textposition='auto',
-                )
-            ])
-            
-            fig.update_layout(
-                title="Distribuição dos Saldos Consolidados",
-                xaxis_title="Indicador",
-                yaxis_title="Valor (R$)",
-                height=500,
-                showlegend=False
+        fig = go.Figure(data=[
+            go.Bar(
+                x=df_grafico['Indicador'],
+                y=df_grafico['Valor'],
+                text=df_grafico['Saldo Acumulado'],
+                textposition='auto',
             )
-            st.plotly_chart(fig, use_container_width=True)
+        ])
+        
+        fig.update_layout(
+            title="Distribuição dos Saldos Consolidados",
+            xaxis_title="Indicador",
+            yaxis_title="Valor (R$)",
+            height=500,
+            showlegend=False
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
         # Análise de Tendências
         st.subheader("Análise de Tendências")
