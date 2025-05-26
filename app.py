@@ -8,6 +8,9 @@ import os
 import traceback
 from pathlib import Path
 
+# Configuração do Streamlit para reduzir watchers
+st.set_option('server.fileWatcherType', 'none')
+
 # Configuração da página
 st.set_page_config(
     page_title="Análise Financeira - 2025",

@@ -1,9 +1,14 @@
 [server]
 enableCORS = false
 enableXsrfProtection = false
+fileWatcherType = "none"
+maxUploadSize = 200
+runOnSave = true
 
 [browser]
 gatherUsageStats = false
+serverAddress = "0.0.0.0"
+serverPort = 8501
 
 [theme]
 primaryColor = "#FF4B4B"
@@ -14,4 +19,8 @@ font = "sans serif"
 
 [logger]
 level = "info"
-messageFormat = "%(asctime)s %(message)s" 
+messageFormat = "%(asctime)s %(message)s"
+
+[runner]
+fastReruns = true
+magicEnabled = false 
