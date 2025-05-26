@@ -219,35 +219,66 @@ def main_page():
         # Métricas importantes
         st.subheader("Métricas Consolidadas (Saldo Acumulado)")
         
-        # Criar um DataFrame com os saldos acumulados por empresa
+        # Criar um DataFrame com os saldos acumulados totais (soma de todas as empresas)
         saldos_consolidados = []
-        for empresa in empresas_selecionadas:
-            for indicador in INDICADORES:
-                dados = df[(df['empresa'] == empresa) & (df['info'] == indicador)]
-                if not dados.empty:
-                    saldo = dados['Saldo acumulado'].iloc[0]  # Pega o saldo acumulado para esta empresa e indicador
-                    saldos_consolidados.append({
-                        'Empresa': empresa,
-                        'Indicador': indicador,
-                        'Saldo Acumulado': f"R$ {saldo:,.2f}"
-                    })
+        for indicador in INDICADORES:
+            # Soma o saldo acumulado de todas as empresas selecionadas para cada indicador
+            saldo_total = df[
+                (df['info'] == indicador) & 
+                (df['empresa'].isin(empresas_selecionadas))
+            ]['Saldo acumulado'].sum()
+            
+            saldos_consolidados.append({
+                'Indicador': indicador,
+                'Saldo Acumulado': f"R$ {saldo_total:,.2f}"
+            })
         
         # Criar DataFrame com os saldos
-        if saldos_consolidados:
-            df_saldos = pd.DataFrame(saldos_consolidados)
+        df_saldos = pd.DataFrame(saldos_consolidados)
+        
+        # Exibir em duas colunas: tabela e gráfico
+        col_metricas1, col_metricas2 = st.columns(2)
+        
+        with col_metricas1:
+            st.write("#### Tabela de Saldos Consolidados")
+            st.table(df_saldos)
+        
+        with col_metricas2:
+            st.write("#### Gráfico de Saldos Consolidados")
+            # Preparar dados para o gráfico (convertendo valores para números)
+            df_grafico = pd.DataFrame(saldos_consolidados)
+            df_grafico['Valor'] = df_grafico['Saldo Acumulado'].str.replace('R$ ', '').str.replace(',', '').astype(float)
             
-            # Dividir os dados por empresa
-            for empresa in empresas_selecionadas:
-                st.write(f"### {empresa}")
-                df_empresa = df_saldos[df_saldos['Empresa'] == empresa]
-                if not df_empresa.empty:
-                    st.table(df_empresa[['Indicador', 'Saldo Acumulado']])
+            fig = go.Figure(data=[
+                go.Bar(
+                    x=df_grafico['Indicador'],
+                    y=df_grafico['Valor'],
+                    text=df_grafico['Saldo Acumulado'],
+                    textposition='auto',
+                )
+            ])
+            
+            fig.update_layout(
+                title="Distribuição dos Saldos Consolidados",
+                xaxis_title="Indicador",
+                yaxis_title="Valor (R$)",
+                height=500,
+                showlegend=False
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
         # Análise de Tendências
         st.subheader("Análise de Tendências")
+        st.write("""
+        Esta seção mostra a evolução dos resultados ao longo do tempo e a distribuição entre as empresas.
+        - O gráfico de barras mostra a evolução mensal do resultado de cada empresa
+        - O gráfico de pizza mostra a proporção do resultado do exercício entre as empresas
+        """)
+        
         col_tendencias1, col_tendencias2 = st.columns(2)
 
         with col_tendencias1:
+            st.write("#### Evolução Mensal do Resultado")
             # Gráfico de barras para comparação entre empresas
             dados_resultado = df[df['info'] == 'RESULTADO DO MES']
             fig_barras = go.Figure()
@@ -255,38 +286,56 @@ def main_page():
             for empresa in empresas_selecionadas:
                 dados_empresa = dados_resultado[dados_resultado['empresa'] == empresa]
                 if not dados_empresa.empty:
+                    # Criar série temporal de resultados
+                    valores = [
+                        dados_empresa['01/2025'].iloc[0],
+                        dados_empresa['02/2025'].iloc[0],
+                        dados_empresa['03/2025'].iloc[0]
+                    ]
+                    
                     fig_barras.add_trace(go.Bar(
                         name=empresa,
                         x=['Janeiro', 'Fevereiro', 'Março'],
-                        y=[dados_empresa['01/2025'].iloc[0],
-                           dados_empresa['02/2025'].iloc[0],
-                           dados_empresa['03/2025'].iloc[0]]
+                        y=valores,
+                        text=[f"R$ {v:,.2f}" for v in valores],
+                        textposition='auto',
                     ))
             
             fig_barras.update_layout(
                 title="Resultado Mensal por Empresa",
                 xaxis_title="Mês",
                 yaxis_title="Valor (R$)",
-                height=400
+                height=400,
+                barmode='group'  # Agrupa as barras por mês
             )
             st.plotly_chart(fig_barras, use_container_width=True)
 
         with col_tendencias2:
+            st.write("#### Distribuição do Resultado do Exercício")
             # Gráfico de pizza para distribuição do resultado
             dados_exercicio = df[df['info'] == 'RESULTADO DO EXERCÍCIO']
             if not dados_exercicio.empty:
+                # Filtrar apenas empresas selecionadas
+                dados_exercicio = dados_exercicio[dados_exercicio['empresa'].isin(empresas_selecionadas)]
+                
                 valores = dados_exercicio['Saldo acumulado'].values
                 empresas = dados_exercicio['empresa'].values
+                
+                # Criar textos formatados para o gráfico
+                texto_valores = [f"R$ {v:,.2f}" for v in valores]
                 
                 fig_pizza = go.Figure(data=[go.Pie(
                     labels=empresas,
                     values=valores,
+                    text=texto_valores,
+                    textinfo='label+text',
                     hole=.3
                 )])
                 
                 fig_pizza.update_layout(
                     title="Distribuição do Resultado do Exercício",
-                    height=400
+                    height=400,
+                    showlegend=True
                 )
                 st.plotly_chart(fig_pizza, use_container_width=True)
 
