@@ -219,30 +219,29 @@ def main_page():
         # Métricas importantes
         st.subheader("Métricas Consolidadas (Saldo Acumulado)")
         
-        # Criar um DataFrame com os saldos acumulados
+        # Criar um DataFrame com os saldos acumulados por empresa
         saldos_consolidados = []
-        for indicador in INDICADORES:
-            saldo = df[df['info'] == indicador]['Saldo acumulado'].sum()
-            saldos_consolidados.append({
-                'Indicador': indicador,
-                'Saldo Acumulado': f"R$ {saldo:,.2f}"
-            })
+        for empresa in empresas_selecionadas:
+            for indicador in INDICADORES:
+                dados = df[(df['empresa'] == empresa) & (df['info'] == indicador)]
+                if not dados.empty:
+                    saldo = dados['Saldo acumulado'].iloc[0]  # Pega o saldo acumulado para esta empresa e indicador
+                    saldos_consolidados.append({
+                        'Empresa': empresa,
+                        'Indicador': indicador,
+                        'Saldo Acumulado': f"R$ {saldo:,.2f}"
+                    })
         
-        # Dividir os indicadores em três colunas
-        df_saldos = pd.DataFrame(saldos_consolidados)
-        n_indicadores = len(INDICADORES)
-        n_por_coluna = (n_indicadores + 2) // 3  # Arredonda para cima
-        
-        col_saldos1, col_saldos2, col_saldos3 = st.columns(3)
-        
-        with col_saldos1:
-            st.table(df_saldos.iloc[0:n_por_coluna])
-        
-        with col_saldos2:
-            st.table(df_saldos.iloc[n_por_coluna:2*n_por_coluna])
-        
-        with col_saldos3:
-            st.table(df_saldos.iloc[2*n_por_coluna:])
+        # Criar DataFrame com os saldos
+        if saldos_consolidados:
+            df_saldos = pd.DataFrame(saldos_consolidados)
+            
+            # Dividir os dados por empresa
+            for empresa in empresas_selecionadas:
+                st.write(f"### {empresa}")
+                df_empresa = df_saldos[df_saldos['Empresa'] == empresa]
+                if not df_empresa.empty:
+                    st.table(df_empresa[['Indicador', 'Saldo Acumulado']])
 
         # Análise de Tendências
         st.subheader("Análise de Tendências")
@@ -301,7 +300,7 @@ def login_page():
     if st.button("Entrar"):
         if check_login(username, password):
             st.session_state['logged_in'] = True
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Usuário ou senha incorretos!")
 

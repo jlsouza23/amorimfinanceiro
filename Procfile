@@ -1,1 +1,1 @@
-web: streamlit run app.py --server.fileWatcherType none --server.maxUploadSize 200 --server.enableWebsocketCompression true --server.enableStaticServing true --logger.level info --global.developmentMode false 
+web: streamlit run app.py --server.fileWatcherType none --server.maxUploadSize 200 --server.enableWebsocketCompression true --logger.level info 
