@@ -4,6 +4,9 @@ enableXsrfProtection = false
 fileWatcherType = "none"
 maxUploadSize = 200
 runOnSave = true
+enableWebsocketCompression = true
+maxMessageSize = 200
+enableStaticServing = true
 
 [browser]
 gatherUsageStats = false
@@ -23,4 +26,13 @@ messageFormat = "%(asctime)s %(message)s"
 
 [runner]
 fastReruns = true
-magicEnabled = false 
+magicEnabled = false
+installTracer = false
+
+[client]
+showErrorDetails = true
+toolbarMode = "minimal"
+
+[global]
+developmentMode = false
+disableWatchdogWarning = true 
