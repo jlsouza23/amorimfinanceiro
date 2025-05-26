@@ -329,7 +329,7 @@ def main_page():
 
         # Distribuição do Resultado do Exercício
         st.write("#### Distribuição do Resultado do Exercício")
-        # Gráfico de pizza para distribuição do resultado
+        # Gráfico de barras horizontais para distribuição do resultado
         dados_exercicio = df[df['info'] == 'RESULTADO DO EXERCÍCIO']
         if not dados_exercicio.empty:
             # Filtrar apenas empresas selecionadas
@@ -341,20 +341,26 @@ def main_page():
             # Criar textos formatados para o gráfico
             texto_valores = [f"R$ {v:,.2f}" for v in valores]
             
-            fig_pizza = go.Figure(data=[go.Pie(
-                labels=empresas,
-                values=valores,
+            fig_barras_h = go.Figure(data=[go.Bar(
+                x=valores,
+                y=empresas,
+                orientation='h',
                 text=texto_valores,
-                textinfo='label+text',
-                hole=.3
+                textposition='auto',
+                marker=dict(
+                    color=['#1f77b4', '#ff7f0e', '#2ca02c'][:len(empresas)]  # Cores diferentes para cada empresa
+                )
             )])
             
-            fig_pizza.update_layout(
-                title="Distribuição do Resultado do Exercício",
+            fig_barras_h.update_layout(
+                title="Distribuição do Resultado do Exercício por Empresa",
+                xaxis_title="Valor (R$)",
+                yaxis_title="Empresa",
                 height=400,
-                showlegend=True
+                showlegend=False,
+                yaxis={'categoryorder':'total ascending'}  # Ordena as barras pelo valor
             )
-            st.plotly_chart(fig_pizza, use_container_width=True)
+            st.plotly_chart(fig_barras_h, use_container_width=True)
 
 # Página de login
 def login_page():
